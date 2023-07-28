@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view 
 from rest_framework.response import Response
 from .models import Person
-from .serializers import PeopleSerializer
+from .serializers import PeopleSerializer,LoginSerializer
 
 @api_view(['GET'])
 def index(request):
@@ -48,3 +48,13 @@ def person(request):
         obj = Person.objects.get(id=data['id'])
         obj.delete()
         return Response({"person's data is deleted"})
+    
+
+@api_view(['POST'])
+def Login(request):    
+    data = request.data 
+    serializer = LoginSerializer(data=data)
+    if serializer.is_valid():
+        data = serializer.data
+        return Response({'message':'success'})
+    return Response(serializer.errors)

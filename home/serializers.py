@@ -1,5 +1,19 @@
 from rest_framework import serializers
 from .models import Person,Color
+from django.contrib.auth.models import User 
+
+class RegisterSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField()
+    def validate(self,data):
+        if data['username']:
+            if User.objects.filter(username=data['username']).exist():
+                raise serializers.ValidationError('username is taken')
+        if data['email']:
+            if User.objects.filter(email=data['email']).exist():
+                raise serializers.ValidationError('email is taken')    
+        return data
 
 class LoginSerializer(serializers.Serializer):
     email= serializers.EmailField()

@@ -1,7 +1,20 @@
 from rest_framework.decorators import api_view 
+from rest_framework import viewsets
 from rest_framework.response import Response
 from .models import Person
-from .serializers import PeopleSerializer,LoginSerializer
+from rest_framework.views import APIView
+from .serializers import PeopleSerializer,LoginSerializer,RegisterSerializer
+from django.contrib.auth.models import User
+
+class RegisterAPI(APIView):
+    def post(self,request):
+        data = request.data 
+        serializer = RegisterSerializer(data=data)
+        if not serializer.is_valid():
+            return Response({'status':False,
+                             'message':serializer.errors})
+        serializer.save()
+        return Response({'status':True,'message':'user created'})
 
 @api_view(['GET'])
 def index(request):
@@ -58,3 +71,14 @@ def Login(request):
         data = serializer.data
         return Response({'message':'success'})
     return Response(serializer.errors)
+
+class PeopleViewSet(viewsets.ModelViewSet):
+    serializer_class = PeopleSerializer
+    queryset = Person.objects.all()
+    def list(self,request):
+        search = request.GET.get('search')
+        queryset = self.queryset
+        if search:
+            queryset = queryset.filter(name__startswith = search)
+        serializer = PeopleSerializer(queryset , many = True)  
+        return Response({'status':200,'data':serializer.data})  

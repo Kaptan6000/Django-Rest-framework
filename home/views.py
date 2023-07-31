@@ -5,6 +5,20 @@ from .models import Person
 from rest_framework.views import APIView
 from .serializers import PeopleSerializer,LoginSerializer,RegisterSerializer
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+
+class LoginAPI(APIView):
+    def post(self,request):
+        data=request.data 
+        serializer = LoginSerializer(data=data)
+        if not serializer.is_valid():
+            return Response({'status':False,
+                             'message':serializer.errors})
+        user = authenticate(username=serializer.data['username'],password=serializer.data['password'])
+        token, _ = Token.objects.get_or_create(user=user)
+        print(token)
+        return Response({'status':True,'message':'user login','token':str(token)})
 
 class RegisterAPI(APIView):
     def post(self,request):

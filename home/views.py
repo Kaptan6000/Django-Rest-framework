@@ -7,6 +7,10 @@ from .serializers import PeopleSerializer,LoginSerializer,RegisterSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+from django.core.paginator import Paginator
+from rest_framework.decorators import action
 
 class LoginAPI(APIView):
     def post(self,request):
@@ -43,6 +47,7 @@ def index(request):
 
 @api_view(['GET','POST','PUT','PATCH','DELETE'])
 def person(request):
+    
     if request.method == 'GET':
         obj = Person.objects.all()
         serializer = PeopleSerializer(obj , many=True)
@@ -96,3 +101,24 @@ class PeopleViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(name__startswith = search)
         serializer = PeopleSerializer(queryset , many = True)  
         return Response({'status':200,'data':serializer.data})  
+    
+    @action(detail=True, methods=['post'])
+    def send_mail_to_person(self,request,pk):
+        obj = Person.objects.get(pk=pk)
+        serializer = PeopleSerializer(obj)
+        return Response({
+            'status':True,
+            "message":"email sent successfully",
+            "data":serializer.data
+        })
+    
+class PersonAPI(APIView):
+    # permission_classes = [IsAuthenticated]
+    # authentication_classes = [TokenAuthentication]
+    def get(self,request):
+        objs = Person.objects.all()
+        page = request.GET.get('page',1)
+        page_size = 1
+        paginator = Paginator(objs,page_size)
+        serializer = PeopleSerializer(paginator.page(page),many=True)
+        return Response(serializer.data)
